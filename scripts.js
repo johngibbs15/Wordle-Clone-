@@ -2,7 +2,17 @@ const tileDisplay = document.querySelector('.tile-container');
 const keyboard = document.querySelector('.key-container');
 const messageDisplay = document.querySelector('.message-container');
 
-const wordle = 'SUPER';
+let wordle;
+
+const getWordle = () => {
+    fetch('http://localhost:8000/word')
+        .then((response) => response.json())
+        .then((json) => {
+            wordle = json.toUpperCase();
+        })
+        .catch((err) => console.log(err));
+};
+getWordle();
 
 const keys = [
     'Q',
@@ -72,17 +82,18 @@ keys.forEach((key) => {
 });
 
 const handleClick = (letter) => {
-    console.log('clicked', letter);
-    if (letter == '<<') {
-        deleteLetter();
-        return;
-    }
+    if (!isGameOver) {
+        if (letter == '<<') {
+            deleteLetter();
+            return;
+        }
 
-    if (letter == 'ENTER') {
-        checkRow();
-        return;
+        if (letter == 'ENTER') {
+            checkRow();
+            return;
+        }
+        addLetter(letter);
     }
-    addLetter(letter);
 };
 
 const addLetter = (letter) => {
@@ -112,22 +123,32 @@ const deleteLetter = () => {
 const checkRow = () => {
     const guess = guessRows[currentRow].join('');
     if (currentTile > 4) {
-        flipTile();
-        if (wordle == guess) {
-            showMessage('Awesome!');
-            isGameOver = true;
-            return;
-        } else {
-            if (currentRow >= 5) {
-                isGameOver = false;
-                showMessage('Game Over');
-                return;
-            }
-            if (currentRow < 5) {
-                currentRow++;
-                currentTile = 0;
-            }
-        }
+        fetch(`http://localhost:8000/check?word=${guess}`)
+            .then((response) => response.json())
+            .then((json) => {
+                if (json == 'Entry word not found') {
+                    showMessage('word not in list');
+                    return;
+                } else {
+                    flipTile();
+                    if (wordle == guess) {
+                        showMessage('Awesome!');
+                        isGameOver = true;
+                        return;
+                    } else {
+                        if (currentRow >= 5) {
+                            isGameOver = true;
+                            showMessage('Game Over');
+                            return;
+                        }
+                        if (currentRow < 5) {
+                            currentRow++;
+                            currentTile = 0;
+                        }
+                    }
+                }
+            })
+            .catch((err) => console.log(err));
     }
 };
 
@@ -179,17 +200,3 @@ const flipTile = () => {
         }, 500 * index);
     });
 };
-
-//const dataLetter = tile.getAttribute('data');
-
-// tile.classList.add('flip');
-// if (dataLetter == wordle[index]) {
-//     tile.classList.add('green-overlay');
-//     addColorToKey(dataLetter, 'green-overlay');
-// } else if (wordle.includes(dataLetter)) {
-//     tile.classList.add('yellow-overlay');
-//     addColorToKey(dataLetter, 'yellow-overlay');
-// } else {
-//     tile.classList.add('grey-overlay');
-//     addColorToKey(dataLetter, 'grey-overlay');
-// }
