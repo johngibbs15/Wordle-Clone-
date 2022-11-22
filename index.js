@@ -1,4 +1,3 @@
-const PORT = 8000;
 const axios = require('axios');
 const express = require('express');
 require('dotenv').config();
@@ -52,4 +51,7 @@ app.get('/word', (req, res) => {
         });
 });
 
-app.listen(PORT, () => console.log('Server running on port' + PORT));
+const port = process.env.PORT || 8080;
+app.listen(port, '0.0.0.0', () => {
+    console.log('Listening on Port ' + port);
+});
